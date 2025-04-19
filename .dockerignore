@@ -1,0 +1,23 @@
+# python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# env / editor
+.venv/
+.idea/
+.vscode/
+*.log
+
+# datasets & checkpoints (pulled by DVC at runtime)
+data/
+models/minilm-epoch3/.*
+reports/
+
+# git & dvc metadata
+.git/
+.dvc/
+
+.venv/

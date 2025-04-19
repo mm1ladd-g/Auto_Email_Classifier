@@ -1,0 +1,11 @@
+.venv/
+
+# in .gitignore
+.DS_Store
+lightning_logs/
+__pycache__/
+*.pyc
+.DS_Store
+__pycache__/
+*.pyc
+.DS_Store
