@@ -1,16 +1,19 @@
-# src/data/build_dataset.py
 """
 Builds train/val/test CSVs from raw Enron + spam corpora using weak keyword rules.
 Run:  python src/data/build_dataset.py
 """
 
-import re, random
-from pathlib import Path
+from __future__ import annotations
+
+import random
+import re
 from collections import Counter
+from pathlib import Path
+from typing import List, Dict
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from langdetect import detect
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 import label_rules as LR
@@ -19,12 +22,15 @@ RAW_DIR = Path("data/raw")
 OUT_DIR = Path("data/processed")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-KEYWORDS = {
+KEYWORDS: Dict[str, List[str]] = {
     "support": LR.SUPPORT,
     "sales": LR.SALES,
     "partnership": LR.PARTNERSHIP,
     "spam": LR.SPAM,
 }
+
+# precedence when multiple buckets match
+LABEL_PRIORITY = ["spam", "support", "sales", "partnership"]
 
 
 def clean(text: str) -> str:
@@ -34,36 +40,35 @@ def clean(text: str) -> str:
 
 def assign_label(text: str) -> str | None:
     t = clean(text)
-    for label, words in KEYWORDS.items():
-        if any(w in t for w in words):
-            return label
-    return None
+    matched = [lbl for lbl, words in KEYWORDS.items() if any(w in t for w in words)]
+    if not matched:
+        return None
+    # pick the highest‑precision bucket
+    matched.sort(key=LABEL_PRIORITY.index)
+    return matched[0]
 
 
-def load_enron() -> list[dict]:
-    csv_path = next((RAW_DIR / "enron").rglob("*.csv"))
-    df = pd.read_csv(csv_path)
-    # find the first column that looks like message text
-    text_col = next(
-        (c for c in df.columns if c.lower() in {"message", "text", "body"}), "message"
-    )
-    rows = []
-    for txt in tqdm(df[text_col].astype(str), desc="Enron CSV"):
-        lbl = assign_label(txt)
-        if lbl:
-            try:
-                lang = detect(txt[:200])
-            except Exception:
-                lang = "unknown"
-            rows.append({"text": txt, "label": lbl, "lang": lang})
+def load_enron() -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    for csv_path in (RAW_DIR / "enron").rglob("*.csv"):
+        df = pd.read_csv(csv_path, on_bad_lines="skip")
+        text_col = next(
+            (c for c in df.columns if c.lower() in {"message", "text", "body"}), "message"
+        )
+        for txt in tqdm(df[text_col].astype(str), desc=f"Enron {csv_path.name}"):
+            lbl = assign_label(txt)
+            if lbl:
+                try:
+                    lang = detect(txt[:200])
+                except Exception:
+                    lang = "unknown"
+                rows.append({"text": txt, "label": lbl, "lang": lang})
     return rows
 
 
-def load_spam() -> list[dict]:
-    rows = []
-    # many Kaggle spam sets include a CSV called spam_emails.csv
-    csv_files = list((RAW_DIR / "spam").rglob("*.csv"))
-    for f in csv_files:
+def load_spam() -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    for f in (RAW_DIR / "spam").rglob("*.csv"):
         df = pd.read_csv(f, encoding="utf‑8", on_bad_lines="skip")
         text_col = next(
             (c for c in df.columns if "text" in c.lower() or "body" in c.lower()), None
@@ -99,8 +104,9 @@ def main():
     )
 
     def to_csv(texts, labels, name):
-        out = pd.DataFrame({"text": texts, "label": labels})
-        out.to_csv(OUT_DIR / f"{name}.csv", index=False)
+        pd.DataFrame({"text": texts, "label": labels}).to_csv(
+            OUT_DIR / f"{name}.csv", index=False
+        )
 
     to_csv(train_text, train_y, "train")
     to_csv(val_text, val_y, "val")

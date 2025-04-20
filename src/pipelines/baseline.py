@@ -1,3 +1,5 @@
+#/src/pipelines/baseline.py
+
 """
 Baseline model: TF‑IDF  ‑>  Multinomial Naïve Bayes
 Usage:  python src/pipelines/baseline.py
