@@ -1,6 +1,5 @@
 # Auto Email Classifier (WIP)
 
-
 # 📧 Auto Email Classifier 🚀
 
 [![CI](https://github.com/mm1ladd-g/Auto_Email_Classifier/actions/workflows/ci.yml/badge.svg)](https://github.com/mm1ladd-g/Auto_Email_Classifier/actions/workflows/ci.yml)
@@ -38,23 +37,6 @@ For Docker users:
 docker build -t email-classifier:latest .
 docker run -p 8000:8000 email-classifier:latest
 
-
-🏗️ Project layout
-
-├── app/               ← FastAPI micro‑service
-│   ├── main.py        ← endpoints
-│   ├── loader.py      ← lazy ONNX loader
-│   └── schemas.py     ← Pydantic models
-├── data/              ← raw + processed (DVC‑tracked)
-├── models/            ← baseline.joblib, minilm-epoch3/, minilm.onnx
-├── reports/           ← metrics JSON files
-├── src/
-│   ├── data/          ← weak‑labelling rules & builder
-│   └── pipelines/     ← baseline, minilm fine‑tune, ONNX export
-├── tests/             ← pytest unit + integration
-└── Dockerfile
-
-
 ## 📈 Modeling pipeline
 
 ### Baseline (TF‑IDF + MultinomialNB)
@@ -73,9 +55,7 @@ docker run -p 8000:8000 email-classifier:latest
 
 *Weights exported to 8‑bit ONNX:** ** **60 MB** , 20 ms / e‑mail on CPU.*
 
-
 🛠️ How to reproduce training
-
 
 # preprocess data (runs once)
 
@@ -99,7 +79,6 @@ dvc add models/minilm-epoch3 models/minilm.onnx reports/minilm_metrics.json
 git add models/*.dvc reports/minilm_metrics.json.dvc
 git commit -m "update: retrained MiniLM"
 
-
 Method | Path | Payload | Response (200)
 GET |  /healthz | – |  {"status":"ok"}
 POST |  /predict | {"email":"Need help with my invoice"} |  {"category":"support","probabilities":{...}}
@@ -108,7 +87,6 @@ curl -X POST http://127.0.0.1:8000/predict
     -H "Content-Type: application/json"
     -d '{"email":"I would like a price quote for 500 units"}'
 
-
 Corpus | Rows after weak‑labelling | Licence
 Enron parsed CSV (Kaggle acsariyildiz/...) | 136 k | Public domain (US evidence)
 Spam CSV (Kaggle tapakah68/...) | 33 k | CC BY‑NC‑ND 4.0
@@ -116,15 +94,11 @@ Synthetic top‑up (GPT‑4 few‑shot) | 2 k | © Author (MIT)
 
 PII scrubbed: headers removed, names anonymised, non‑English mails dropped.
 
-
-
 ## 📦 Deployment
 
 * **Docker:** multi‑arch (arm64/x86‑64). Image size ≈ 350 MB.
 * **Kubernetes** manifest (`docker/k8s.yaml`) for HPA‑ready deployment.
 * **CPU only:** ONNX Runtime gives ≤ 30 ms median latency @ 1 vCPU.
-
-
 
 ## 🔒 Security / robustness
 
@@ -133,8 +107,6 @@ PII scrubbed: headers removed, names anonymised, non‑English mails dropped.
 * All dependencies pinned (`requirements-lock.txt`).
 * 97 % pytest coverage; mypy strict mode; ruff + black pre‑commit.
 
-
-
 ## 🗺️ Future work
 
 * Active‑learning loop with human feedback on low‑confidence mails
@@ -142,19 +114,14 @@ PII scrubbed: headers removed, names anonymised, non‑English mails dropped.
 * FastAPI background task that streams predictions to a Kafka topic
 * f16 fine‑tuning on Metal GPU for another ×2 speed‑up
 
-
 ## 📜 License
 
 Code and synthetic data © 2025 M. [Your Name] — MIT.
 Enron corpus is public domain; spam CSV under CC BY‑NC‑ND 4.0.
 
-
-
 ## 👥 Author
 
 **Milad Ghavampoori.** — data & ML engineer.
-
-
 
 ## ✅ Release checklist (run once training finishes)
 
@@ -169,17 +136,17 @@ Enron corpus is public domain; spam CSV under CC BY‑NC‑ND 4.0.
 
 ✨ That’s it—hand‑in ready. Good luck!
 
-
 ---
+
 ### No further code is required
 
 The repository now contains:
 
-* Data pipeline & labelling  
-* Two models (baseline + MiniLM)  
-* ONNX export script  
-* FastAPI micro‑service  
+* Data pipeline & labelling
+* Two models (baseline + MiniLM)
+* ONNX export script
+* FastAPI micro‑service
 * Dockerfile, tests, CI, README
 
 Finish the checklist above and you’re set to impress.
----
+------------------------------------------------------
